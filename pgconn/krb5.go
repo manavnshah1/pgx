@@ -11,7 +11,7 @@ import (
 // RegisterGSSProvider.
 type NewGSSFunc func() (GSS, error)
 
-var newGSS NewGSSFunc
+// var newGSS NewGSSFunc
 
 // RegisterGSSProvider registers a GSS authentication provider. For example, if
 // you need to use Kerberos to authenticate with your server, add this to your
@@ -22,9 +22,29 @@ var newGSS NewGSSFunc
 //	func init() {
 //		pgconn.RegisterGSSProvider(func() (pgconn.GSS, error) { return gopgkrb5.NewGSS() })
 //	}
-func RegisterGSSProvider(newGSSArg NewGSSFunc) {
-	newGSS = newGSSArg
+
+// func RegisterGSSProvider(newGSSArg NewGSSFunc) {
+// 	newGSS = newGSSArg
+// }
+
+
+// RegisterGSSProviderAndReadKrb5Config registers a GSS authentication provider and reads the Kerberos configuration from PgConn.
+// this is mostly pretty useless and i'd recommend the following usage when consuming this package:
+// ADD THIS: Set the GSS provider for this connection
+// config, err := pgx.ParseConfig(*connString)
+// if err != nil {
+// 	log.Fatalf("Failed to parse connection string: %v", err)
+// }
+// config.Config.NewGSS = func() (pgconn.GSS, error) {
+// 	return gopgkrb5.NewGSSWithKrb5Path(*krb5ccname)
+// }
+func RegisterGSSProviderAndReadKrb5Config(newGSSArg NewGSSFunc) *PgConn {
+	pgConn := &PgConn{
+		newGSS: newGSSArg,
+	}
+	return pgConn
 }
+
 
 // GSS provides GSSAPI authentication (e.g., Kerberos).
 type GSS interface {
@@ -34,10 +54,10 @@ type GSS interface {
 }
 
 func (c *PgConn) gssAuth() error {
-	if newGSS == nil {
+	if c.newGSS == nil {
 		return errors.New("kerberos error: no GSSAPI provider registered, see https://github.com/otan/gopgkrb5")
 	}
-	cli, err := newGSS()
+	cli, err := c.newGSS()
 	if err != nil {
 		return err
 	}

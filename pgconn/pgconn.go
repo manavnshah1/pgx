@@ -104,6 +104,8 @@ type PgConn struct {
 	fieldDescriptions [16]FieldDescription
 
 	cleanupDone chan struct{}
+
+	newGSS NewGSSFunc
 }
 
 // Connect establishes a connection to a PostgreSQL server using the environment and connString (in URL or keyword/value
@@ -308,6 +310,7 @@ func connectOne(ctx context.Context, config *Config, connectConfig *connectOneCo
 	pgConn.config = config
 	pgConn.cleanupDone = make(chan struct{})
 	pgConn.customData = make(map[string]any)
+	pgConn.newGSS = config.NewGSS
 
 	var err error
 

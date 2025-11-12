@@ -83,6 +83,8 @@ type Config struct {
 	OnPgError PgErrorHandler
 
 	createdByParseConfig bool // Used to enforce created by ParseConfig rule.
+
+	NewGSS NewGSSFunc
 }
 
 // ParseConfigOptions contains options that control how a config is built such as GetSSLPassword.
